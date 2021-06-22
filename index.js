@@ -19,6 +19,16 @@ var mimickedReactEvents = {
     onSelectionChange: 'onSelect'
 };
 
+var proxyHandlers = {
+    get: function(target, prop, _receiver) {
+        if (prop === "currentTarget") {
+            return target._reactCurrentTarget;
+        }
+        const value = target[prop];
+        return (value instanceof Function) ? value.bind(target) : value;
+    }
+};
+
 module.exports = function retargetEvents(shadowRoot) {
     var removeEventListeners = [];
 
@@ -29,6 +39,7 @@ module.exports = function retargetEvents(shadowRoot) {
         function retargetEvent(event) {
 
             var path = event.path || (event.composedPath && event.composedPath()) || composedPath(event.target);
+            var proxy = new Proxy(event, proxyHandlers);
 
             for (var i = 0; i < path.length; i++) {
 
@@ -36,6 +47,7 @@ module.exports = function retargetEvents(shadowRoot) {
                 var props = null;
                 var reactComponent = findReactComponent(el);
                 var eventHandlers = findReactEventHandlers(el);
+                event._reactCurrentTarget = el;
 
                 if (!eventHandlers) {
                     props = findReactProps(reactComponent);
@@ -44,11 +56,11 @@ module.exports = function retargetEvents(shadowRoot) {
                 }
 
                 if (reactComponent && props) {
-                    dispatchEvent(event, reactEventName, props);
+                    dispatchEvent(proxy, reactEventName, props);
                 }
 
                 if (reactComponent && props && mimickedReactEvents[reactEventName]) {
-                    dispatchEvent(event, mimickedReactEvents[reactEventName], props);
+                    dispatchEvent(proxy, mimickedReactEvents[reactEventName], props);
                 }
 
                 if (event.cancelBubble) {
