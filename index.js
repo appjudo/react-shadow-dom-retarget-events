@@ -14,6 +14,8 @@ var divergentNativeEvents = {
 var mimickedReactEvents = {
     onInput: 'onChange',
     onFocusOut: 'onBlur',
+    onMouseOver: 'onMouseEnter',
+    onMouseOut: 'onMouseLeave',
     onSelectionChange: 'onSelect'
 };
 
