@@ -25,7 +25,7 @@ var proxyHandlers = {
             return target._reactCurrentTarget;
         }
         const value = target[prop];
-        return (value instanceof Function) ? value.bind(target) : value;
+        return (typeof value === "function") ? value.bind(target) : value;
     }
 };
 
